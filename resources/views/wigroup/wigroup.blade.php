@@ -4,10 +4,11 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Laravel</title>
+        <title>Wigroup</title>
 
         <!-- Fonts -->
         <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
@@ -22,27 +23,96 @@
                 color:#fff;
             }
 
-            .full-width {
-                width: 100%;
+            .absolute {
+                position: absolute;
             }
         </style>
     </head>
 
     <body class="antialiased">
         <div class="relative flex items-top justify-center min-h-screen bg-gray-100 dark:bg-gray-900 sm:pt-0">
-            <div class="mt-8 bg-white dark:bg-gray-800 overflow-hidden shadow sm:rounded-lg">
-                <div class="grid grid-cols-1 md:grid-cols-1">
 
-                    <div class="text-center">
-                        <h1>{{ $pageName }}</h1>
-                    </div>
-
-                    @include('wigroup.' . $page)
-
-                </div>
+            <div class="absolute top-0 px-6 py-6 sm:block">
+                <a href="{{ route('wigroup.auto_search') }}" class="text-sm text-white-700 underline">Auto Search</a>
+                <a href="{{ route('wigroup.wiki') }}" class="ml-4 text-sm text-white-700 underline">Wiki Search</a>
             </div>
-        </div>
 
+            <div class="container mt-8 bg-gray dark:bg-gray-800 overflow-hidden shadow sm:rounded-lg pt-4">
+                <div class="text-center">
+                    <h1>{{ $pageTitle }}</h1>
+                </div>
+
+                @include('wigroup.' . $page)
+
+            </div>
+
+        </div>
     </body>
 
 </html>
+<script>
+    $(document).ready(function() {
+        if($('#url_iframe').length) {
+            $('#url_iframe').attr('src', window.location.origin);
+        }
+    });
+
+    $(document).off('click', '#load_url');
+    $(document).on('click', '#load_url', function() {
+        var src = $('#url_input').val();
+
+        if (isNullOrUndefined(src) || !isUrl(src)) {
+            alert('Please enter a valid URL.');
+            return false;
+        }
+        src = (src.startsWith('http://') || src.startsWith('https://')) ? src : 'http://' + src;
+        $('#url_iframe').attr('src', src);
+    });
+
+    $(document).off('click', '#search_wiki');
+    $(document).on('click', '#search_wiki', function() {
+        var wiki_api = 'https://en.wikipedia.org/w/api.php?action=query&list=search&format=json&srsearch=';
+        var search_input = $('#search_input').val();
+
+        if (isNullOrUndefined(search_input)) {
+            alert('Please enter valid search parameters.');
+            return false;
+        }
+
+        wiki_api = wiki_api + search_input + '&origin=*';
+
+        $.get({
+            url: wiki_api,
+            success: function (response) {
+                if(response.query.search.length) {
+                    $('#results_container').removeClass('hidden');
+                    $('.search_results').empty();
+                    $.each(response.query.search, function( key, value ) {
+                        $('.search_results').append('<p class="px-3"><h5>' + value.title + '</h5></p><p class="px-3"><a href="/wigroup/wiki_details/' + value.title + '/' + value.pageid + '">' + value.snippet + '</a></p>');
+                    });
+                } else {
+                    $('#results_container').removeClass('hidden');
+                    $('.search_results').empty();
+                    $('.search_results').append('<p>No results found.</p>');
+                }
+            }
+        }).fail(function (response) {
+            alert("issue", response, wiki_api);
+        });
+    });
+
+    function isNullOrUndefined(value)
+    {
+        return typeof value == 'string' && !value.trim() || typeof value == 'undefined' || value === null;
+    }
+
+    function isUrl(url)
+    {
+        regexp =  /^(?:(?:https?|ftp):\/\/)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/\S*)?$/;
+        if (regexp.test(url)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+</script>

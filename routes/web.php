@@ -19,4 +19,4 @@ Route::get('/', function () {
 
 Route::get('/wigroup/auto_search', '\App\Http\Controllers\WigroupController@autoSearch')->name('wigroup.auto_search');
 Route::get('/wigroup/wiki', '\App\Http\Controllers\WigroupController@wiki')->name('wigroup.wiki');
-Route::get('/wigroup/store_data', '\App\Http\Controllers\WigroupController@storeData')->name('wigroup.store_data');
+Route::get('/wigroup/wiki_details/{title?}/{pageid?}', '\App\Http\Controllers\WigroupController@wikiDetails')->name('wigroup.wiki_details');
